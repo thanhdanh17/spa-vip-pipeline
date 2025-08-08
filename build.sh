@@ -10,9 +10,23 @@ echo "🚀 Starting SPA VIP build process..."
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
-# Install dependencies
+# Install dependencies with error handling
 echo "📦 Installing dependencies..."
-pip install -r requirements.txt
+if pip install -r requirements.txt; then
+    echo "✅ Dependencies installed successfully!"
+else
+    echo "❌ Failed to install dependencies, trying fallback..."
+    # Fallback: Install core dependencies without version constraints
+    pip install supabase python-dotenv psycopg2-binary
+    pip install selenium beautifulsoup4 requests webdriver-manager lxml python-dateutil
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
+    pip install transformers tensorflow-cpu sentencepiece
+    pip install pandas numpy scipy scikit-learn
+    pip install matplotlib seaborn plotly
+    pip install fastapi uvicorn gunicorn
+    pip install tqdm Pillow typing-extensions colorama python-json-logger
+    echo "✅ Fallback installation completed!"
+fi
 
 # Create necessary directories
 echo "📁 Creating directories..."
