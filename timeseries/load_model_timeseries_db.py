@@ -73,13 +73,16 @@ class StockPredictor:
         }
 
     def load_model(self):
+        # Try using model manager for HuggingFace models
         try:
-            self.model = tf.keras.models.load_model(self.model_path)
-            print(f"✅ Model loaded: {self.model_path}")
+            from models.model_manager import get_model_manager
+            manager = get_model_manager()
+            self.model = manager.load_timeseries_model()
+            print("✅ Model loaded via ModelManager from HuggingFace")
             return True
         except Exception as e:
-            print(f"❌ Error loading model: {e}")
-            return False
+            print(f"❌ Failed to load timeseries model: {e}")
+            raise RuntimeError("Unable to load timeseries model. Please ensure HuggingFace models are available.")
 
     def load_last_window_data(self):
         """Lấy dữ liệu window_size ngày gần nhất có close_price (15 ngày cho model hiện tại)"""
@@ -253,14 +256,7 @@ def run_prediction_for_table(model_path, table_name):
 
 def main():
     """Main function for standalone testing"""
-    # Configuration - use absolute path to model
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(current_dir, "..", "model_AI", "timeseries_model", "model_lstm", "LSTM_missing10_window15.keras")
-    
-    print(f"🔍 Model path: {model_path}")
-    print(f"🔍 Model exists: {os.path.exists(model_path)}")
-    
-    # Test with multiple tables
+    # Test with multiple tables (no longer using local model path)
     tables = ["FPT_Stock", "GAS_Stock", "IMP_Stock", "VCB_Stock"]
     
     print("\n🚀 SPA VIP TIMESERIES PREDICTION")
@@ -275,7 +271,8 @@ def main():
         print("=" * 50)
         
         try:
-            success = run_prediction_for_table(model_path, table)
+            # Use empty model_path since we'll load from HuggingFace
+            success = run_prediction_for_table("", table)
             if success:
                 successful_predictions += 1
                 print(f"✅ {table}: Dự đoán thành công")

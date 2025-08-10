@@ -17,10 +17,10 @@ class IndustryClassificationPipeline:
         try:
             logging.info("🏭 Initializing Industry Classification Pipeline...")
             
-            # Initialize industry classifier
+            # Initialize industry classifier using ModelManager (HuggingFace)
             self.industry_classifier = PhoBERTClassifier(
-                Config.MODEL_INDUSTRY_PATH,
-                Config.INDUSTRY_LABELS
+                model_path=None,  # Will use ModelManager internally
+                labels=Config.INDUSTRY_LABELS
             )
             
             # Initialize database connector

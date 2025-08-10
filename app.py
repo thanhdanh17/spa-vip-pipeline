@@ -46,9 +46,19 @@ async def health_check():
         
         db_status = "connected" if result.returncode == 0 else "error"
         
+        # Check model availability
+        model_status = {}
+        try:
+            from models.model_manager import get_model_manager
+            manager = get_model_manager()
+            model_status = manager.check_all_models()
+        except Exception as e:
+            model_status = {"error": str(e)}
+        
         return {
             "status": "healthy",
             "database": db_status,
+            "models": model_status,
             "timestamp": datetime.now().isoformat(),
             "services": {
                 "crawling": "available",
@@ -156,6 +166,44 @@ async def run_sentiment_pipeline():
         logger.info(f"Sentiment analysis completed with exit code: {result.returncode}")
     except Exception as e:
         logger.error(f"Sentiment analysis failed: {e}")
+
+@app.post("/models/download")
+async def download_models(background_tasks: BackgroundTasks):
+    """Download all AI models from Hugging Face"""
+    background_tasks.add_task(run_model_download)
+    return {"message": "Model download started", "status": "in_progress"}
+
+@app.get("/models/status")
+async def models_status():
+    """Check status of AI models"""
+    try:
+        from models.model_manager import get_model_manager
+        manager = get_model_manager()
+        status = manager.check_all_models()
+        
+        all_available = all(status.values())
+        
+        return {
+            "models": status,
+            "all_available": all_available,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error checking models: {str(e)}")
+
+async def run_model_download():
+    """Background task to download all models"""
+    try:
+        logger.info("Starting model download...")
+        result = subprocess.run(
+            ["python", "download_models.py", "--all"],
+            capture_output=True,
+            text=True,
+            timeout=1800  # 30 minutes timeout
+        )
+        logger.info(f"Model download completed with exit code: {result.returncode}")
+    except Exception as e:
+        logger.error(f"Model download failed: {e}")
 
 if __name__ == "__main__":
     import uvicorn

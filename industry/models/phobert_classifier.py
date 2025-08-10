@@ -19,21 +19,19 @@ class IndustryClassifier(nn.Module):
         return self.fc(output)
 
 class PhoBERTClassifier:
-    def __init__(self, model_path, labels):
+    def __init__(self, model_path=None, labels=None):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.labels = labels
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained("vinai/phobert-base")
-            self.model = IndustryClassifier(n_classes=len(labels))
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"Model file not found at: {model_path}")
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.to(self.device)
-            self.model.eval()
-            logging.info(f"Model loaded successfully from {model_path}")
+            # Use model manager for HuggingFace models only
+            from models.model_manager import get_model_manager
+            manager = get_model_manager()
+            self.model, self.tokenizer, self.labels = manager.load_industry_model()
+            self.model = self.model.to(self.device)
+            logging.info("Model loaded successfully via ModelManager from HuggingFace")
         except Exception as e:
-            logging.error(f"Error initializing classifier: {str(e)}")
-            raise
+            logging.error(f"Failed to load industry model from HuggingFace: {str(e)}")
+            raise RuntimeError("Unable to load industry model. Please ensure HuggingFace models are available.")
 
     def predict(self, text):
         try:

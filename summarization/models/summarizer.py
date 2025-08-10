@@ -68,21 +68,13 @@ class NewsSummarizer:
     def _load_model(self):
         """Safely load tokenizer and model"""
         try:
-            logger.info("Loading tokenizer...")
-            self.tokenizer = T5Tokenizer.from_pretrained(
-                str(self.model_path),
-                legacy=False,
-                local_files_only=True
-            )
-            
-            logger.info("Loading model weights...")
-            self.model = T5ForConditionalGeneration.from_pretrained(
-                str(self.model_path),
-                local_files_only=True
-            ).to(self.device)
-            
+            # Use model manager for HuggingFace models only
+            from models.model_manager import get_model_manager
+            manager = get_model_manager()
+            self.model, self.tokenizer = manager.load_summarization_model()
+            self.model = self.model.to(self.device)
             self.model.eval()
-            logger.info(f"Model loaded on {self.device}")
+            logger.info(f"Model loaded via ModelManager from HuggingFace on {self.device}")
             
         except Exception as e:
             logger.error("Model loading failed")

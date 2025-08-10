@@ -37,16 +37,15 @@ class SentimentClassifier(nn.Module):
 
 # ====================== 2. Load model & tokenizer ======================
 def load_sentiment_model():
-    """Load sentiment analysis model and tokenizer"""
-    model = SentimentClassifier(n_classes=3)
-    model_path = os.path.join(os.path.dirname(__file__), "..", "model_AI", "sentiment_model", "Phobert_hyper_parameters", "PhoBERT_summary_sentiment_optuna.bin")
-    model.load_state_dict(torch.load(model_path, map_location="cpu"))
-    model.eval()
-    
-    tokenizer = AutoTokenizer.from_pretrained("vinai/phobert-base")
-    id2label = {0: "Positive", 1: "Negative", 2: "Neutral"}
-    
-    return model, tokenizer, id2label
+    """Load sentiment analysis model and tokenizer - HuggingFace only"""
+    try:
+        # Use model manager for HuggingFace models
+        from models.model_manager import get_model_manager
+        manager = get_model_manager()
+        return manager.load_sentiment_model()
+    except Exception as e:
+        print(f"❌ Failed to load sentiment model from HuggingFace: {str(e)}")
+        raise RuntimeError("Unable to load sentiment model. Please ensure HuggingFace models are available.")
 
 # Initialize model globally (will be loaded when needed)
 model, tokenizer, id2label = None, None, None

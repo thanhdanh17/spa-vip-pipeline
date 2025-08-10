@@ -1,21 +1,19 @@
 # 🚀 SPA VIP - INTEGRATED NEWS PROCESSING SYSTEM
 
-Hệ thống xử lý tin tức tự động hoàn chỉnh từ crawl đến tóm tắt AI với kiến trúc tập trung.
+Hệ thống xử lý tin tức tự động hoàn chỉnh từ crawl đến tóm tắt AI với kiến trúc HuggingFace.
 
-## 📁 Cấu trúc dự án (CẬP NHẬT)
+## 📁 Cấu trúc dự án (CLEAN & SIMPLIFIED)
 
 ```
 SPA_vip/
 ├── 📁 crawl/                          # Hệ thống crawl tin tức
 │   ├── main_crawl.py                  # Controller chính
 │   ├── crawlers/                      # Các crawler cụ thể
-│   ├── config/                        # Cấu hình crawler cũ (deprecated)
 │   └── crawl_stock/                   # Crawler giá cổ phiếu
 │
 ├── 📁 summarization/                  # Hệ thống tóm tắt AI
 │   ├── main_summarization.py         # Pipeline tóm tắt
-│   ├── models/                        # Python modules (không có model weights)
-│   ├── database/                      # Handler cũ (deprecated)
+│   ├── models/                        # Python modules
 │   └── utils/                         # Utilities
 │
 ├── 📁 sentiment/                      # Hệ thống phân tích sentiment
@@ -27,28 +25,23 @@ SPA_vip/
 │   ├── main_timeseries.py             # Controller dự đoán
 │   └── load_model_timeseries_db.py    # Load model LSTM
 │
-├── 📁 industry/ 🆕                    # ✨ HỆ THỐNG PHÂN LOẠI NGÀNH (MỚI)
+├── 📁 industry/                       # ✨ HỆ THỐNG PHÂN LOẠI NGÀNH
 │   ├── main.py                        # Controller phân loại ngành
 │   ├── pipeline/                      # Pipeline xử lý
 │   ├── models/                        # PhoBERT classifier
 │   └── utils/                         # Database utilities
 │
-├── 📁 model_AI/ 🆕                    # ✨ TẤT CẢ AI MODELS (KHÔNG PUSH LÊN GIT)
-│   ├── sentiment_model/               # PhoBERT cho phân tích sentiment
-│   │   └── Phobert_hyper_parameters/  # Model weights + training files
-│   ├── summarization_model/           # ViT5 cho tóm tắt tin tức
-│   │   └── model_vit5/               # Model weights + config files
-│   ├── timeseries_model/             # LSTM cho dự đoán giá
-│   │   └── model_lstm/               # Model weights + training files
-│   ├── industry_model/               # PhoBERT cho phân loại ngành
-│   │   └── PhoBERT_summary_industry.bin # Model weights
-│   └── README.md                     # Hướng dẫn về các models
+├── 📁 model_cache/ 🆕                 # ✨ HUGGINGFACE MODELS CACHE
+│   ├── sentiment_model/               # PhoBERT cho sentiment (từ HF)
+│   ├── summarization_model/           # ViT5 cho tóm tắt (từ HF)
+│   ├── timeseries_model/             # LSTM cho dự đoán (từ HF)
+│   └── industry_model/               # PhoBERT cho ngành (từ HF)
 │
-├── 📁 database/                       # ✨ HỆ THỐNG DATABASE TẬP TRUNG (MỚI)
+├── 📁 database/                       # ✨ HỆ THỐNG DATABASE TẬP TRUNG
 │   ├── __init__.py                    # Package initialization
 │   ├── config.py                      # Cấu hình database
 │   ├── supabase_manager.py            # Manager chính
-│   ├── schemas.py                     # Data schemas
+│   └── schemas.py                     # Data schemas
 │   ├── test_connection.py             # Test connection
 │   └── README.md                      # Documentation
 │
@@ -409,6 +402,30 @@ python database/test_connection.py       # Test connection
 
 📖 **Chi tiết**: Xem `database/DATABASE_CONFIG.md`
 
+## 🤗 HUGGINGFACE MODEL INTEGRATION
+
+### Model Management:
+```bash
+python download_models.py --check        # Check model status
+python download_models.py --all          # Download all models
+python model_manager.py --check          # Verify models
+```
+
+### Available Models on HuggingFace:
+- **Sentiment**: `danhne123/sentiment_model` (PhoBERT-based)
+- **Summarization**: `danhne123/summary_model` (ViT5-based)  
+- **Timeseries**: `danhne123/timeseries` (LSTM-based)
+- **Industry**: `danhne123/industry_model` (PhoBERT-based)
+
+### Model Cache Structure:
+```
+model_cache/
+├── sentiment_model/Phobert_hyper_parameters/
+├── summarization_model/model_vit5/
+├── timeseries_model/model_lstm/
+└── industry_model/
+```
+
 ### Workflow Testing:
 ```bash
 python main.py --crawl-only              # Test crawling
@@ -425,16 +442,6 @@ python -c "import torch; print('PyTorch:', torch.__version__)"
 python -c "from transformers import T5Tokenizer; print('Transformers OK')"
 python -c "import tensorflow as tf; print('TensorFlow:', tf.__version__)"
 ```
-
-### 📂 Cấu trúc model_AI cần thiết:
-```
-model_AI/
-├── sentiment_model/Phobert_hyper_parameters/PhoBERT_summary_sentiment_optuna.bin
-├── summarization_model/model_vit5/model.safetensors  
-└── timeseries_model/model_lstm/LSTM_missing10_window15.keras
-```
-
-### 📥 TẢI MODELS:
 **Google Drive**: https://drive.google.com/drive/folders/1RctDhes_yJkdLtzqnEIZoHERxW-eaFKS?usp=drive_link
 
 **Hướng dẫn**:

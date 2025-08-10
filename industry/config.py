@@ -19,8 +19,8 @@ class Config:
     # Use centralized database config
     DATABASE_CONFIG = DatabaseConfig()
     
-    # Model paths - Updated to use model_AI centralized structure
-    MODEL_INDUSTRY_PATH = os.path.join(parent_dir, 'model_AI', 'industry_model', 'PhoBERT_summary_industry.bin')
+    # Model loading - will use ModelManager for HuggingFace
+    # No longer using local model paths
     
     # Table configuration - Industry classification only works on General_News
     NEWS_TABLES = ['General_News']  # Only process general news for industry classification

@@ -24,7 +24,7 @@ class SupabaseHandler:
     def get_table_stats(self):
         return self.db_manager.get_table_stats()
 
-from models.summarizer import NewsSummarizer
+from .models.summarizer import NewsSummarizer
 
 # Import Config bằng cách explicit để tránh conflict
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -59,8 +59,17 @@ class SummarizationPipeline:
         """Lazy load model để tiết kiệm memory"""
         if self.summarizer is None:
             logger.info("Loading AI model...")
-            self.summarizer = NewsSummarizer()
-            logger.info("Model loaded and ready")
+            # Use ModelManager instead of direct NewsSummarizer
+            try:
+                from models.model_manager import get_model_manager
+                manager = get_model_manager()
+                self.summarizer = manager.load_summarization_model()
+                logger.info("✅ Model loaded via ModelManager")
+            except Exception as e:
+                logger.error(f"❌ Failed to load model via ModelManager: {e}")
+                # Fallback to direct NewsSummarizer if needed
+                self.summarizer = NewsSummarizer()
+                logger.info("Model loaded via fallback")
     
     def log_table_stats(self):
         """Log statistics for all news tables với priority analysis"""
