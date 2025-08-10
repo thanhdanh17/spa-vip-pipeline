@@ -11,10 +11,17 @@ import logging
 import os
 from datetime import datetime
 import asyncio
+import schedule
+import threading
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Global scheduler state
+scheduler_running = False
+scheduler_thread = None
 
 app = FastAPI(
     title="SPA VIP Pipeline",
@@ -204,6 +211,113 @@ async def run_model_download():
         logger.info(f"Model download completed with exit code: {result.returncode}")
     except Exception as e:
         logger.error(f"Model download failed: {e}")
+
+# ============================================================================
+# 🕒 AUTOMATED SCHEDULING FUNCTIONS
+# ============================================================================
+
+def scheduled_crawl():
+    """Scheduled crawling job"""
+    logger.info("🕒 Scheduled crawl started")
+    asyncio.create_task(run_crawl_pipeline())
+
+def scheduled_sentiment():
+    """Scheduled sentiment analysis job"""
+    logger.info("🕒 Scheduled sentiment analysis started")
+    asyncio.create_task(run_sentiment_pipeline())
+
+def scheduled_full_pipeline():
+    """Scheduled full pipeline job"""
+    logger.info("🕒 Scheduled full pipeline started")
+    asyncio.create_task(run_full_pipeline())
+
+def run_scheduler():
+    """Background thread to run the scheduler"""
+    global scheduler_running
+    scheduler_running = True
+    
+    # Schedule jobs
+    schedule.every(1).hours.do(scheduled_crawl)  # Crawl every hour
+    schedule.every(4).hours.do(scheduled_sentiment)  # Sentiment every 4 hours
+    schedule.every().day.at("02:00").do(scheduled_full_pipeline)  # Full pipeline at 2 AM
+    
+    logger.info("📅 Scheduler started with jobs:")
+    logger.info("  - Crawl: Every 1 hour")
+    logger.info("  - Sentiment: Every 4 hours") 
+    logger.info("  - Full Pipeline: Daily at 2:00 AM")
+    
+    while scheduler_running:
+        schedule.run_pending()
+        time.sleep(60)  # Check every minute
+
+@app.on_event("startup")
+async def startup_event():
+    """Start scheduler when app starts"""
+    global scheduler_thread
+    if not scheduler_running:
+        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+        scheduler_thread.start()
+        logger.info("🚀 Scheduler started!")
+
+# ============================================================================
+# 🎛️ SCHEDULER CONTROL ENDPOINTS
+# ============================================================================
+
+@app.get("/scheduler/status")
+async def scheduler_status():
+    """Get scheduler status and next jobs"""
+    jobs_info = []
+    for job in schedule.jobs:
+        jobs_info.append({
+            "job": str(job.job_func.__name__),
+            "next_run": str(job.next_run),
+            "interval": str(job.interval),
+            "unit": job.unit
+        })
+    
+    return {
+        "scheduler_running": scheduler_running,
+        "jobs": jobs_info,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post("/scheduler/stop")
+async def stop_scheduler():
+    """Stop the scheduler"""
+    global scheduler_running
+    scheduler_running = False
+    schedule.clear()
+    return {"message": "Scheduler stopped", "status": "stopped"}
+
+@app.post("/scheduler/start")
+async def start_scheduler():
+    """Start/restart the scheduler"""
+    global scheduler_thread, scheduler_running
+    
+    if scheduler_running:
+        return {"message": "Scheduler already running", "status": "running"}
+    
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+    return {"message": "Scheduler started", "status": "running"}
+
+@app.post("/schedule/crawl")
+async def schedule_crawl_now():
+    """Trigger crawl job immediately"""
+    scheduled_crawl()
+    return {"message": "Crawl job triggered", "status": "running"}
+
+@app.post("/schedule/sentiment")
+async def schedule_sentiment_now():
+    """Trigger sentiment job immediately"""
+    scheduled_sentiment()
+    return {"message": "Sentiment job triggered", "status": "running"}
+
+@app.post("/schedule/full")
+async def schedule_full_now():
+    """Trigger full pipeline job immediately"""
+    scheduled_full_pipeline()
+    return {"message": "Full pipeline job triggered", "status": "running"}
 
 if __name__ == "__main__":
     import uvicorn

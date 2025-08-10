@@ -86,6 +86,12 @@ python-jose==3.5.0
 structlog==25.4.0
 
 # ============================================================================
+# ⏰ SCHEDULING & AUTOMATION
+# ============================================================================
+schedule==1.2.0
+APScheduler==3.10.4
+
+# ============================================================================
 # 🎯 RENDER-SPECIFIC OPTIMIZATIONS:
 # - CPU-only versions for faster deployment
 # - Fixed versions for reproducible builds

@@ -1,17 +1,41 @@
 # Render Deployment Configuration
-service:
-  name: spa-vip-pipeline
-  env: python
-  region: oregon
-  plan: standard
-  
-  buildCommand: chmod +x build.sh && ./build.sh
-  startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
-  
-  envVars:
-    - key: PYTHON_VERSION
-      value: 3.12.7
-    - key: SUPABASE_URL
-      sync: false  # Set manually in dashboard
-    - key: SUPABASE_KEY  
-      sync: false  # Set manually in dashboard
+services:
+  # Main Web Service
+  - type: web
+    name: spa-vip-pipeline
+    env: python
+    region: oregon
+    plan: standard
+    
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SUPABASE_URL
+        sync: false  # Set manually in dashboard
+      - key: SUPABASE_KEY  
+        sync: false  # Set manually in dashboard
+      - key: API_BASE_URL
+        value: https://spa-vip-pipeline.onrender.com  # Update with your actual URL
+
+  # Background Scheduler Service (Optional - for dedicated scheduler)
+  - type: worker
+    name: spa-vip-scheduler
+    env: python
+    region: oregon
+    plan: starter
+    
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: python scheduler.py
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: API_BASE_URL
+        value: https://spa-vip-pipeline.onrender.com  # Update with your actual URL
